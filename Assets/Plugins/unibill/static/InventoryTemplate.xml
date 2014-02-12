@@ -1,0 +1,76 @@
+<?xml version="1.0"?>
+<inventory>
+  <iOSSKU>99</iOSSKU>
+  <androidBillingPlatform>GooglePlay</androidBillingPlatform>
+  <GooglePlayPublicKey>[Your key]</GooglePlayPublicKey>
+  <useAmazonSandbox>true</useAmazonSandbox>
+  <item id="com.outlinegames.100goldcoins" purchaseType="Consumable">
+    <name>100 Gold Coins</name>
+    <description>Standard issue coin, 0% gold by volume</description>
+    <platforms>
+      <GooglePlay>
+        <GooglePlay.Id>com.outlinegames.100goldcoins.v2</GooglePlay.Id>
+        <priceInLocalCurrency>1.99</priceInLocalCurrency>
+        <defaultLocale>en_US</defaultLocale>
+        <autoTranslate>false</autoTranslate>
+      </GooglePlay>
+      <AmazonAppstore />
+      <AppleAppStore>
+        <appleAppStorePriceTier>33</appleAppStorePriceTier>
+      </AppleAppStore>
+      <MacAppStore>
+        <MacAppStore.Id>com.outlinegames.100goldcoinsosx</MacAppStore.Id>
+      </MacAppStore>
+    </platforms>
+  </item>
+  <item id="com.outlinegames.sword" purchaseType="NonConsumable">
+    <name>Magic Sword</name>
+    <description>Can slice through time</description>
+    <platforms>
+      <GooglePlay>
+        <priceInLocalCurrency>0</priceInLocalCurrency>
+        <defaultLocale>en_US</defaultLocale>
+        <autoTranslate>true</autoTranslate>
+      </GooglePlay>
+      <AmazonAppstore />
+      <AppleAppStore>
+        <appleAppStorePriceTier>1</appleAppStorePriceTier>
+      </AppleAppStore>
+      <MacAppStore>
+        <MacAppStore.Id>com.outlinegames.swordosx</MacAppStore.Id>
+      </MacAppStore>
+    </platforms>
+  </item>
+  <item id="com.outlinegames.potion" purchaseType="NonConsumable">
+    <name>potion</name>
+    <description>Helps all manner of ailments.</description>
+    <platforms>
+      <GooglePlay>
+        <priceInLocalCurrency>0</priceInLocalCurrency>
+        <defaultLocale>en_US</defaultLocale>
+        <autoTranslate>true</autoTranslate>
+      </GooglePlay>
+      <AmazonAppstore />
+      <AppleAppStore>
+        <appleAppStorePriceTier>1</appleAppStorePriceTier>
+      </AppleAppStore>
+      <MacAppStore />
+    </platforms>
+  </item>
+  <item id="com.outlinegames.premiumsubscription" purchaseType="Subscription">
+    <name>Premium Subscription</name>
+    <description>Entitles the holder to super powers.</description>
+    <platforms>
+      <GooglePlay>
+        <priceInLocalCurrency>0</priceInLocalCurrency>
+        <defaultLocale>en_US</defaultLocale>
+        <autoTranslate>true</autoTranslate>
+      </GooglePlay>
+      <AmazonAppstore />
+      <AppleAppStore>
+        <appleAppStorePriceTier>1</appleAppStorePriceTier>
+      </AppleAppStore>
+      <MacAppStore />
+    </platforms>
+  </item>
+</inventory>

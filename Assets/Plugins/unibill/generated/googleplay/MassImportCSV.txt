@@ -1,0 +1,4 @@
+Product ID,Published State,Purchase Type,Auto Translate,Locale; Title; Description,Auto Fill Prices,Price
+com.outlinegames.100goldcoins.v2,published,managed_by_android,false,"en_US;100 Gold Coins;Standard issue coin, 0% gold by volume",true,1990000
+com.outlinegames.sword,published,managed_by_android,false,"en_US;Magic Sword;Can slice through time",true,0
+com.outlinegames.potion,published,managed_by_android,false,"en_US;potion;Helps all manner of ailments.",true,0

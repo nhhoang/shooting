@@ -1,0 +1,10 @@
+fileFormatVersion: 2
+guid: 890db38bd4c29496b8429d2f8eaefeb2
+labels:
+- amazonappstore
+- billing
+- inapppurchase
+- googleplay
+- storekit
+DefaultImporter:
+  userData: 

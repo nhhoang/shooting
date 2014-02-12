@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 7983dfbd717694878b2f753f71af1f0e
+labels:
+- amazonappstore
+- billing
+- inapppurchase
+- googleplay
+- storekit
+MonoImporter:
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 

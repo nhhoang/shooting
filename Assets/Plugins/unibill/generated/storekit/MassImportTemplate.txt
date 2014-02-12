@@ -1,0 +1,4 @@
+SKU	Product ID	Reference Name	Type	Cleared For Sale	Wholesale Price Tier	Displayed Name	Description	Screenshot Path
+99	com.outlinegames.100goldcoins.v2	com.outlinegames.100goldcoins.v2	Consumable	yes	33	100 Gold Coins	Standard issue coin, 0% gold by volume	
+99	com.outlinegames.sword	com.outlinegames.sword	Non-Consumable	yes	1	Magic Sword	Can slice through time	
+99	com.outlinegames.potion	com.outlinegames.potion	Non-Consumable	yes	1	potion	Helps all manner of ailments.	
