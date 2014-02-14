@@ -18,13 +18,6 @@ public class MyPoolManager : MonoBehaviour {
 	
 	public static void CommonPrefab() {
 		CreatePrefab(poolName, "Prefabs/Screens/GameScreen/Bullets/NormalBullet", 10, 10);
-		CreatePrefab(poolName, "Prefabs/Screens/GameScreen/Bullets/RapidBullet", 10, 10);
-		CreatePrefab(poolName, "Prefabs/Screens/GameScreen/Bullets/BigExplosionBullet", 10, 10);
-		CreatePrefab(poolName, "Prefabs/Screens/GameScreen/Enemies/EnemyA", 10, 10);
-		CreatePrefab(poolName, "Prefabs/Screens/GameScreen/Enemies/EnemyB", 10, 10);
-		CreatePrefab(poolName, "Prefabs/Screens/GameScreen/Enemies/EnemyC", 10, 10);
-		CreatePrefab(poolName, "Prefabs/Screens/GameScreen/Enemies/EnemyD", 10, 10);
-		CreatePrefab(poolName, "Prefabs/Screens/GameScreen/Item/Item", 10, 10);
 		CreatePrefab(poolName, "Prefabs/Screens/GameScreen/UI/GameScreenUI", 1, 1);
 		CreatePrefab(poolName, "Prefabs/Screens/GameScreen/UI/BulletUI", 5, 5);
 	}
