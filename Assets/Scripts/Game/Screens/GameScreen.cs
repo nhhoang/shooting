@@ -20,8 +20,6 @@ public class GameScreen : BaseScreen {
 	
 	public Controller controller;
 	private BulletManager bulletManager;
-	private EnemyManager enemyManager;
-	private ItemManager itemManager;
 	private GameScreenUI gameScreenUI;
 	
 	public override void Init(params object[] inputs) {
@@ -55,16 +53,6 @@ public class GameScreen : BaseScreen {
 		bulletManager.transform.parent = thisTransform;
 		bulletManager.Init(controller);
 		controller.Init(bulletManager);
-		
-		// Add Enemy manager
-		enemyManager = new GameObject("Enemy Manager", typeof(EnemyManager)).GetComponent<EnemyManager>();
-		enemyManager.transform.parent = thisTransform;
-		enemyManager.Init();
-		
-		// Add Item manager
-		itemManager = new GameObject("Item Manager", typeof(ItemManager)).GetComponent<ItemManager>();
-		itemManager.transform.parent = thisTransform;
-		itemManager.Init();
 		
 		Resources.UnloadUnusedAssets();
 		

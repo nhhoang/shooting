@@ -31,7 +31,7 @@ public class BulletManager : MonoBehaviour {
 	void Awake() {
 		trans = transform;
 		currentType = Bullet.Type.NORMAL;
-		Physics.gravity = new Vector3(0, -250.0f, 0);
+		Physics.gravity = new Vector3(0, -9.0f, 0);
 	}
 	
 	public void Init(Controller controller) {
@@ -45,17 +45,7 @@ public class BulletManager : MonoBehaviour {
 		currentType = type;
 		switch (currentType) {
 			case Bullet.Type.NORMAL:
-				reloadTime = 1.5f;
-			break;
-			
-			case Bullet.Type.RAPID:
-				reloadTime = 0.3f;
-				Add(type, numBullet);
-			break;
-			
-			case Bullet.Type.BIG_EXPLOSION:
-				reloadTime = 1.5f;
-				Add(type, numBullet);
+				reloadTime = 0.5f;
 			break;
 		}
 		
@@ -81,18 +71,6 @@ public class BulletManager : MonoBehaviour {
 				obj = MyPoolManager.Spawn("NormalBullet");
 				tmpBullet = go.AddComponent<NormalBullet>();
 					
-			break;
-			
-			case Bullet.Type.RAPID:
-				go = new GameObject("RapidBulletContainer");
-				obj = MyPoolManager.Spawn("RapidBullet");
-				tmpBullet = go.AddComponent<RapidBullet>();
-			break;
-			
-			case Bullet.Type.BIG_EXPLOSION:
-				go = new GameObject("BigExplosionBulletContainer");
-				obj = MyPoolManager.Spawn("BigExplosionBullet");
-				tmpBullet = go.AddComponent<BigExplosionBullet>();
 			break;
 		}
 		
@@ -128,14 +106,6 @@ public class BulletManager : MonoBehaviour {
 		switch (type) {
 			case Bullet.Type.NORMAL:
 				numBulletCanInvoke = 3;
-			break;
-			
-			case Bullet.Type.RAPID:
-				numBulletCanInvoke = 3;
-			break;
-			
-			case Bullet.Type.BIG_EXPLOSION:
-				numBulletCanInvoke = 5;
 			break;
 		}
 

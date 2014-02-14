@@ -18,17 +18,7 @@ public class BulletUI : MonoBehaviour {
 		switch (bulletType) {
 			case Bullet.Type.NORMAL:
 				sprite.spriteName = "circles_11";
-				secondsToReload = 1.5f;
-			break;
-			
-			case Bullet.Type.RAPID:
-				sprite.spriteName = "star_11";
-				secondsToReload = 0.3f;
-			break;
-			
-			case Bullet.Type.BIG_EXPLOSION:
-				sprite.spriteName = "death_11";
-				secondsToReload = 1.5f;
+				secondsToReload = 0.5f;
 			break;
 		}
 	}

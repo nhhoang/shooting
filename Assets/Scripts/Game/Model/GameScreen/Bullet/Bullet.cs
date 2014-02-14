@@ -3,9 +3,7 @@ using System.Collections;
 
 public class Bullet : MonoBehaviour {
 	public enum Type {
-		NORMAL,
-		RAPID,
-		BIG_EXPLOSION
+		NORMAL
 	}
 	
 	public float damage = 1f;

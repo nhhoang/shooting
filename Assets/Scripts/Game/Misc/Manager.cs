@@ -22,8 +22,6 @@ public class Manager : MonoBehaviour {
 	}
 	
 	public void Init() {
-		EnemyLevelReference.Init();
-		EnemyReference.Init();
 	}
 	
 	void OnDestroy() {
