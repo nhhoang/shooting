@@ -18,9 +18,11 @@ public class GameScreen : BaseScreen {
 		STATE_TRANSITION_OUT
 	}
 	
+	public static bool isTimePlayMode;  								// Time play mode for 90 seconds, or bullet mode for 100 bullet
 	public Controller controller;
 	private BulletManager bulletManager;
 	private GameScreenUI gameScreenUI;
+	private FallingController fallingController;
 	
 	public override void Init(params object[] inputs) {
     double t = Network.time;
@@ -54,8 +56,12 @@ public class GameScreen : BaseScreen {
 		bulletManager.Init(controller);
 		controller.Init(bulletManager);
 		
-		Resources.UnloadUnusedAssets();
+		isTimePlayMode = true;
+		fallingController = gameObject.AddComponent<FallingController>() as FallingController;
+		fallingController.Init();
 		
+		Resources.UnloadUnusedAssets();
+		state = (int)State.STATE_READY;
 		// Debug.Log("gameScreen load in " + (Network.time - t1));
 	}
 
@@ -68,6 +74,7 @@ public class GameScreen : BaseScreen {
 			break;
 			
 			case (int)State.STATE_READY:	
+				fallingController.DoUpdate();
 			break;
 			
 			case (int)State.STATE_PAUSING:
