@@ -40,6 +40,8 @@ public class ObjectManager : MonoBehaviour {
 	private int gainedPoints = 2;
 	private int ziczacChance = 45;
 	private int ziczacRandom = 0;
+	private Renderer render;
+	public static Color[] colors = new Color[9];
 	
 	public void Init(FallingController manager) {
 		myController = manager;
@@ -47,6 +49,15 @@ public class ObjectManager : MonoBehaviour {
 		objectContainer.parent = transform;
 		xPosRange = (float)Screen.width / 4 + 12f;
 		yPosRange = (float)Screen.height / 4 + 20f;
+		colors[0] = Color.black;
+		colors[1] = Color.blue;
+		colors[2] = Color.cyan;
+		colors[3] = Color.gray;
+		colors[4] = Color.green;
+		colors[5] = Color.magenta;
+		colors[6] = Color.red;
+		colors[7] = Color.yellow;
+		colors[8] = Color.white;
 	}
 	
 	public void DoUpdate() {
@@ -61,9 +72,9 @@ public class ObjectManager : MonoBehaviour {
 	
 	// Add objects to list
 	public void AddObject(GroupType groupType) {
-		// Instatiate falling object
-		Debug.Log(Time.time + " adding object------ " + groupType);		
+		// Instatiate falling object		
 		objType = Random.Range(1, 9);  // We will use 8 correspond colors for random object type
+		Debug.Log(Time.time + " adding object------ " + groupType + " object type " + objType + " color: " + colors[objType - 1]);		
 		go = new GameObject("FalliingObject");
 		obj = MyPoolManager.Spawn("NormalBullet");
 		fallingObject = go.AddComponent<FallingObject>();
@@ -71,7 +82,9 @@ public class ObjectManager : MonoBehaviour {
 		Utils.SetParent(go.transform, obj);
 		Utils.SetParent(objectContainer, go.transform);
 		go.transform.position = new Vector3(Random.Range(-xPosRange, xPosRange), yPosRange, 0);
+		render = obj.GetComponent<Renderer>();
 		
+			
 		switch(groupType) {
 			case GroupType.NORMAL:
 				ziczacRandom = Random.Range(0, 100);
@@ -83,6 +96,7 @@ public class ObjectManager : MonoBehaviour {
 					fallOrbitType = 0;
 				}
 				gainedPoints = 2;
+				render.material.SetColor("_TintColor", colors[objType - 1]);
 			break;
 			
 			case GroupType.BIG:
@@ -95,6 +109,7 @@ public class ObjectManager : MonoBehaviour {
 					fallOrbitType = 0;
 				}
 				gainedPoints = Random.Range(3, 6);
+				render.material.SetColor("_TintColor", colors[objType - 1]);
 				
 				// Random object size for big falling object
 				randomBigSize = Random.Range(1.2f, 1.8f);
@@ -105,16 +120,22 @@ public class ObjectManager : MonoBehaviour {
 				fallOrbitType = 0;
 				fallSpeed = Random.Range(1.5f, 4.5f) * 10;
 				gainedPoints = 2;
+				render.material.SetColor("_TintColor", colors[8]);
+				randomBigSize = Random.Range(1.5f, 1.8f);
+				obj.transform.localScale = new Vector3(obj.transform.localScale.x * randomBigSize, obj.transform.localScale.y * randomBigSize, obj.transform.localScale.z);
 			break;
 			
 			case GroupType.EXPLODE:
 				fallOrbitType = 0;
 				fallSpeed = Random.Range(2.5f, 5f) * 10;
 				gainedPoints = 5;
+				render.material.SetColor("_TintColor", colors[objType - 1]);
+				randomBigSize = Random.Range(1.5f, 1.8f);
+				obj.transform.localScale = new Vector3(obj.transform.localScale.x * randomBigSize, obj.transform.localScale.y * randomBigSize, obj.transform.localScale.z);
 			break;
 		}
 		
-		fallingObject.Init(this, obj, objType, (int)groupType, fallSpeed, fallOrbitType, fallRadius, gainedPoints);
+		fallingObject.Init(this, obj, render, objType, (int)groupType, fallSpeed, fallOrbitType, fallRadius, gainedPoints);
 		fallingObjects.Add(fallingObject);
 		numObjects++;
 	}

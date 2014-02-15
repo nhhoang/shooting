@@ -15,9 +15,10 @@ public class FallingObject : MonoBehaviour {
 	private Transform thisTransform;
 	private Transform child;
 	private ObjectManager manager;
+	private Renderer render;
 	
 	// Init objects properties
-	public void Init(ObjectManager mana, Transform childTransform, int objType, int gType, float fSpeed, int fOrbitType, float fRadius, int gPoints) {
+	public void Init(ObjectManager mana, Transform childTransform, Renderer objRenderer, int objType, int gType, float fSpeed, int fOrbitType, float fRadius, int gPoints) {
 		isDestroy = false;
 		manager = mana;
 		objectType = objType;
@@ -28,7 +29,7 @@ public class FallingObject : MonoBehaviour {
 		gainedPoints = gPoints;
 		if (groupType == (int)ObjectManager.GroupType.EXPLODE) {
 			randomType = objectType;
-			InvokeRepeating("ChangeRandomType", 0, 0.2f);
+			InvokeRepeating("ChangeRandomType", 0, 0.5f);
 		}
 		
 		if (fallOrbitType == 1) {
@@ -36,6 +37,7 @@ public class FallingObject : MonoBehaviour {
 			Invoke("ChangeOrbit", 0.2f);
 		}
 		
+		render = objRenderer;
 		child = childTransform;
 		thisTransform = transform;
 	}
@@ -75,6 +77,7 @@ public class FallingObject : MonoBehaviour {
 	void ChangeRandomType() {
 		// @TODO: randomType should reflects in color
 		randomType = Random.Range(1, 9);
+		render.material.SetColor("_TintColor", ObjectManager.colors[randomType - 1]);
 	}
 	
 	void ChangeOrbit() {
