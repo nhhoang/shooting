@@ -78,9 +78,9 @@ public class FallingObject : MonoBehaviour {
 	}
 	
 	void ChangeOrbit() {
-		Invoke("ChangeOrbit", Random.Range(0.2f, 2.5f));
+		Invoke("ChangeOrbit", Random.Range(0.2f, 1.5f));
 		fallVector.x = Random.Range(-0.9f, 0.9f);
-		fallSpeed += Random.Range(-5f, 5f);
+		fallSpeed += Random.Range(-10f, 10f);
 		if (fallSpeed <= 10) {
 			fallSpeed = 10f;
 		} else if (fallSpeed >= 50) {
