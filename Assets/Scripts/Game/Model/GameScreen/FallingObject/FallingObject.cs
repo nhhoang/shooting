@@ -10,6 +10,7 @@ public class FallingObject : MonoBehaviour {
 	private int gainedPoints = 2;
 	private int randomType = -1;
 	private bool isDestroy = false;
+	private Vector3 fallVector = Vector3.down;
 	
 	private Transform thisTransform;
 	private Transform child;
@@ -26,9 +27,15 @@ public class FallingObject : MonoBehaviour {
 		fallRadius = fRadius;
 		gainedPoints = gPoints;
 		if (groupType == (int)ObjectManager.GroupType.EXPLODE) {
-			// @TODO: randomType should reflects in color
-			randomType = Random.Range(1, 9);
+			randomType = objectType;
+			InvokeRepeating("ChangeRandomType", 0, 0.2f);
 		}
+		
+		if (fallOrbitType == 1) {
+			// Change orbit in interval time
+			Invoke("ChangeOrbit", 0.2f);
+		}
+		
 		child = childTransform;
 		thisTransform = transform;
 	}
@@ -46,7 +53,13 @@ public class FallingObject : MonoBehaviour {
 	}
 	
 	void FallingToFloor() {
-		thisTransform.Translate(Vector3.down * fallSpeed * Time.deltaTime, Space.World);
+		if (fallOrbitType == 0) {
+			// Fall straight down
+			thisTransform.Translate(Vector3.down * fallSpeed * Time.deltaTime, Space.World);
+		} else {
+			// Fall in ziczac orbit
+			thisTransform.Translate(fallVector * fallSpeed * Time.deltaTime, Space.World);
+		}
 	}
 	
 	// Change fall speed
@@ -55,6 +68,23 @@ public class FallingObject : MonoBehaviour {
 			fallSpeed /= 2;
 		} else {
 			fallSpeed *= 2;
+		}
+	}
+	
+	// Change random type for EXPLODE object
+	void ChangeRandomType() {
+		// @TODO: randomType should reflects in color
+		randomType = Random.Range(1, 9);
+	}
+	
+	void ChangeOrbit() {
+		Invoke("ChangeOrbit", Random.Range(0.2f, 2.5f));
+		fallVector.x = Random.Range(-0.9f, 0.9f);
+		fallSpeed += Random.Range(-5f, 5f);
+		if (fallSpeed <= 10) {
+			fallSpeed = 10f;
+		} else if (fallSpeed >= 50) {
+			fallSpeed = 50;
 		}
 	}
 	
@@ -67,6 +97,8 @@ public class FallingObject : MonoBehaviour {
 	public void Disapear(bool isShoot) {
 		if (!isDestroy) {
 			isDestroy = true;
+			CancelInvoke();
+			
 			if (isShoot) {
 				GameData.UpdateScore(gainedPoints);
 			}

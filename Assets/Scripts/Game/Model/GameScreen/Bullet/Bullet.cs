@@ -9,7 +9,7 @@ public class Bullet : MonoBehaviour {
 	public float damage = 1f;
 	
 	protected Type type;
-	protected float speed = 450.0f;
+	protected float speed = 150.0f;
 	protected Transform trans;
 	protected Transform child;
 	protected Rigidbody rig;
