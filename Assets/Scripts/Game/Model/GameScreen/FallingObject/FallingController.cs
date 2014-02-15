@@ -33,7 +33,7 @@ public class FallingController : MonoBehaviour {
 		}
 		
 		if (Time.time >= nextSpawnTime) {
-			nextSpawnTime = Time.time + Random.Range(0.1f, 0.5f);
+			nextSpawnTime = Time.time + Random.Range(0.4f, 0.8f);
 			isObjectSpawn = false;
 			
 			// At a moment, there is max 1 freeze object, 2 explode objects

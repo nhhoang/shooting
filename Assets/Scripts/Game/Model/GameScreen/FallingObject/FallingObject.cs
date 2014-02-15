@@ -6,15 +6,17 @@ public class FallingObject : MonoBehaviour {
 	private int groupType = 0;
 	private float fallSpeed = 1f;
 	private int fallOrbitType = 0;   // 0 - straight down, 1 - ziczac
-	private int fallRadius = 1;
+	private float fallRadius = 1f;
 	private int gainedPoints = 2;
 	private int randomType = -1;
 	private bool isDestroy = false;
 	
+	private Transform thisTransform;
+	private Transform child;
 	private ObjectManager manager;
 	
 	// Init objects properties
-	public void Init(ObjectManager mana, int objType, int gType, float fSpeed, int fOrbitType, int fRadius, int gPoints) {
+	public void Init(ObjectManager mana, Transform childTransform, int objType, int gType, float fSpeed, int fOrbitType, float fRadius, int gPoints) {
 		isDestroy = false;
 		manager = mana;
 		objectType = objType;
@@ -27,6 +29,8 @@ public class FallingObject : MonoBehaviour {
 			// @TODO: randomType should reflects in color
 			randomType = Random.Range(1, 9);
 		}
+		child = childTransform;
+		thisTransform = transform;
 	}
 	
 	// Update is called once per frame
@@ -42,6 +46,7 @@ public class FallingObject : MonoBehaviour {
 	}
 	
 	void FallingToFloor() {
+		thisTransform.Translate(Vector3.down * fallSpeed * Time.deltaTime, Space.World);
 	}
 	
 	// Change fall speed
@@ -76,7 +81,8 @@ public class FallingObject : MonoBehaviour {
 				break;
 			}
 				
-			// @TODO: use despawn
+			// Despawn game object
+			MyPoolManager.Despawn(child);
 			Destroy(gameObject); 
 		}
 	}
