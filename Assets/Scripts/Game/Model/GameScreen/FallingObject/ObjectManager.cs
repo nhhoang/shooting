@@ -42,6 +42,7 @@ public class ObjectManager : MonoBehaviour {
 	private int ziczacRandom = 0;
 	private Renderer render;
 	public static Color[] colors = new Color[9];
+	private int randomBonusObject = 0;
 	
 	public void Init(FallingController manager) {
 		myController = manager;
@@ -58,6 +59,7 @@ public class ObjectManager : MonoBehaviour {
 		colors[6] = Color.red;
 		colors[7] = Color.yellow;
 		colors[8] = Color.white;
+		Invoke("SetBonusObject", Random.Range(5, 10));
 	}
 	
 	public void DoUpdate() {
@@ -68,6 +70,16 @@ public class ObjectManager : MonoBehaviour {
 				numObjects--;
 			}
 		} 
+	}
+	
+	// For interval 5 - 10s, make an object as bonus that can gain 10 times of normal points
+	void SetBonusObject() {
+		randomBonusObject = Random.Range(0, numObjects);
+		if (numObjects > 0 && fallingObjects[randomBonusObject].CanBeBonusObject()) {
+			Invoke("SetBonusObject", Random.Range(5, 10));
+		} else {
+			Invoke("SetBonusObject", 0.2f);
+		}
 	}
 	
 	// Add objects to list

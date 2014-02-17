@@ -10,6 +10,7 @@ public class FallingObject : MonoBehaviour {
 	private int gainedPoints = 2;
 	private int randomType = -1;
 	private bool isDestroy = false;
+	private bool isBonusObject = false;
 	private Vector3 fallVector = Vector3.down;
 	
 	private Transform thisTransform;
@@ -20,6 +21,7 @@ public class FallingObject : MonoBehaviour {
 	// Init objects properties
 	public void Init(ObjectManager mana, Transform childTransform, Renderer objRenderer, int objType, int gType, float fSpeed, int fOrbitType, float fRadius, int gPoints) {
 		isDestroy = false;
+		isBonusObject = false;
 		manager = mana;
 		objectType = objType;
 		groupType = gType;
@@ -94,6 +96,18 @@ public class FallingObject : MonoBehaviour {
 	// Compare object type
 	public bool IsSameType(int targetType) {
 		return targetType == objectType;	
+	}
+	
+	// Check whether it can be bonus object
+	public bool CanBeBonusObject() {
+		if (!isDestroy && !isBonusObject && groupType != (int)ObjectManager.GroupType.FREEZE && groupType != (int)ObjectManager.GroupType.EXPLODE) {
+			isBonusObject = true;
+			// @TODO: hightlight object
+			gainedPoints *= 10;
+			return true;
+		}
+		
+		return false;
 	}
 	
 	// Object get shoot and be destroyed

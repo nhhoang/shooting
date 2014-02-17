@@ -46,15 +46,15 @@ public class Director : MonoBehaviour {
 	
 	// Process when player exist and resume game
 	void OnApplicationPause(bool Pause) {
-		if (Pause && Manager.gameData != null) {
-
+		if (Pause) {
+			GameData.SaveData();
 		} else if (!Pause && !isGameStartNormally && !(Application.platform == RuntimePlatform.OSXEditor)) {
 
 		}
 	}
 
 	void OnApplicationQuit() {
-
+		GameData.SaveData();
 	}
 	
 	public void SetScreen(ScreenType screenId, params object[] inputs) {

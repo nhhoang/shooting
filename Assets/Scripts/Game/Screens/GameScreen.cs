@@ -61,6 +61,7 @@ public class GameScreen : BaseScreen {
 		fallingController.Init();
 		
 		Resources.UnloadUnusedAssets();
+		GameData.InitGame();
 		state = (int)State.STATE_READY;
 		// Debug.Log("gameScreen load in " + (Network.time - t1));
 	}

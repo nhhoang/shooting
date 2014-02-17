@@ -6,12 +6,10 @@ using Holoville.HOTween;
 using System.Collections;
 
 public class Manager : MonoBehaviour {
-	public static GameData gameData;
 	private static bool isInitData = false;
 	private static Manager instance;
 	
 	void Awake() {
-    gameData = GameObject.Find("MiscObjects/GameData").GetComponent<GameData>();
 		HOTween.Init(true, true, true);
 
 		if (!isInitData) {
@@ -22,6 +20,8 @@ public class Manager : MonoBehaviour {
 	}
 	
 	public void Init() {
+		// Load Game data
+		GameData.LoadData();
 	}
 	
 	void OnDestroy() {
