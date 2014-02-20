@@ -29,6 +29,7 @@ public class FallingObject : MonoBehaviour {
 		fallOrbitType = fOrbitType;
 		fallRadius = fRadius;
 		gainedPoints = gPoints;
+		childTransform.GetComponent<FallingObjectVisibleCheck>().Init(this);
 		if (groupType == (int)ObjectManager.GroupType.EXPLODE) {
 			randomType = objectType;
 			InvokeRepeating("ChangeRandomType", 0, 0.5f);

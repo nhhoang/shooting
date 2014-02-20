@@ -86,11 +86,11 @@ public class ObjectManager : MonoBehaviour {
 	public void AddObject(GroupType groupType) {
 		// Instatiate falling object		
 		objType = Random.Range(1, 9);  // We will use 8 correspond colors for random object type
-		Debug.Log(Time.time + " adding object------ " + groupType + " object type " + objType + " color: " + colors[objType - 1]);		
+//		Debug.Log(Time.time + " adding object------ " + groupType + " object type " + objType + " color: " + colors[objType - 1]);		
 		go = new GameObject("FalliingObject");
-		obj = MyPoolManager.Spawn("NormalBullet");
+		obj = MyPoolManager.Spawn("NormalEnemy");
 		fallingObject = go.AddComponent<FallingObject>();
-		obj.gameObject.layer = 9;
+//		obj.gameObject.layer = 10;
 		Utils.SetParent(go.transform, obj);
 		Utils.SetParent(objectContainer, go.transform);
 		go.transform.position = new Vector3(Random.Range(-xPosRange, xPosRange), yPosRange, 0);

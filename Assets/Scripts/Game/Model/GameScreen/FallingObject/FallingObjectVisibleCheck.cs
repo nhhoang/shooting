@@ -1,14 +1,14 @@
 using UnityEngine;
 using System.Collections;
 
-public class BulletVisibleCheck : Visiblecheck {
-	public override void Init(Bullet bullet) {
-		thisBullet = bullet;
+public class FallingObjectVisibleCheck : Visiblecheck {
+	public override void Init(FallingObject fallingObject) {
+		thisFallingObject = fallingObject;
 		destroyed = false;
 	}
 	
 	void OnCollisionEnter(Collision collision) {
-		if (collision.gameObject.layer == 9) {
+		if (collision.gameObject.layer == 10) {
 			return;
 		}
 
@@ -18,7 +18,7 @@ public class BulletVisibleCheck : Visiblecheck {
 	public override void Destroy(bool isKilled = true) {
 		if (!destroyed) {
 			destroyed = true;
-			thisBullet.Destroy();
+			thisFallingObject.Disapear(isKilled);
 		}
 	}
 }
