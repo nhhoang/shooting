@@ -9,6 +9,7 @@ public class GameData {
 	
 	private static int isSoundOn = 1;
 	private static int isMusicOn = 1;
+	private static int isFreeApps = 1;
 	
 	public static void InitGame() {
 		currentScore = 0;
@@ -16,6 +17,8 @@ public class GameData {
 	
 	public static void UpdateScore(int gainPoints) {
 		currentScore += gainPoints;
+		UpdateBestScore();
+		Debug.Log ("currentScore ------- " + currentScore);
 	}
 	
 	public static void UpdateBestScore() {
@@ -29,9 +32,17 @@ public class GameData {
 			}
 		}
 	}
-	
+
+	public static int GetCurrentScore() {
+		return currentScore;
+	}
+
 	public static int GetBestScore() {
 		return GameScreen.isTimePlayMode ? bestTimeModeScore : bestBulletModeScore;
+	}
+
+	public static void PaidForApps() {
+		isFreeApps = 0;
 	}
 
 	private static string fileName = "MIData.txt";
@@ -46,6 +57,7 @@ public class GameData {
 		
 		j.Add("music", isMusicOn);
 		j.Add("sound", isSoundOn);
+		j.Add("notPaid", isFreeApps);
 		
 		dataStr = j.ToString();
 		string md5 = Utils.Md5Sum(secureKey + dataStr);
@@ -70,6 +82,7 @@ public class GameData {
 						bestBulletModeScore = j.GetInt("bScore");
 						isMusicOn = j.GetInt("music");
 						isSoundOn = j.GetInt("sound");
+						isFreeApps = j.GetInt("notPaid");
 					} else {
 						Debug.Log("original file is modified");
 					}

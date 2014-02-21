@@ -45,7 +45,7 @@ public class BulletManager : MonoBehaviour {
 		currentType = type;
 		switch (currentType) {
 			case Bullet.Type.NORMAL:
-				reloadTime = 0.5f;
+				reloadTime = 1.5f;
 			break;
 		}
 		

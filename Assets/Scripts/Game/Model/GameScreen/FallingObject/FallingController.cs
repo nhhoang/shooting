@@ -14,9 +14,11 @@ public class FallingController : MonoBehaviour {
 	private int numFreezeObjects = 0;
 	private int numExplodeObjects = 0;
 	private bool isObjectSpawn = false;
+	private bool isGameObject = false;
 	
 	public void Init() {
 		passTime = 0;
+		isGameObject = false;
 		markTime = Time.time;
 		nextSpawnTime = Time.time + 1f;
 		objectManager = gameObject.AddComponent<ObjectManager>() as ObjectManager;
@@ -24,6 +26,10 @@ public class FallingController : MonoBehaviour {
 	}
 	
 	public void DoUpdate() {
+		if (isGameObject) {
+			return;
+		}
+
 		objectManager.DoUpdate();
 		
 		// Checking game time
@@ -33,7 +39,7 @@ public class FallingController : MonoBehaviour {
 		}
 		
 		if (Time.time >= nextSpawnTime) {
-			nextSpawnTime = Time.time + Random.Range(0.4f, 0.8f);
+			nextSpawnTime = Time.time + Random.Range(1.8f, 2.5f);
 			isObjectSpawn = false;
 			
 			// At a moment, there is max 1 freeze object, 2 explode objects
@@ -103,6 +109,7 @@ public class FallingController : MonoBehaviour {
 	// Game runs out of time
 	public void EventGameOver() {
 		//@TODO: show game result screen
-		GameData.UpdateBestScore();
+		isGameObject = true;
+		Debug.Log ("::::::Game is over, should show result screen, currentScore " + GameData.GetCurrentScore() + " bestScore " + GameData.GetBestScore());
 	}
 }

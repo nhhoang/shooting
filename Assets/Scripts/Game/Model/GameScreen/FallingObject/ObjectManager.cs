@@ -43,22 +43,27 @@ public class ObjectManager : MonoBehaviour {
 	private Renderer render;
 	public static Color[] colors = new Color[9];
 	private int randomBonusObject = 0;
+	private int numFailObject = 0;
+	private int objectNormalScale = 8;
+	private bool isGameObject = false;
 	
 	public void Init(FallingController manager) {
+		numFailObject = 0;
+		isGameObject = false;
 		myController = manager;
 		objectContainer = new GameObject("ObjectContainer").transform;
 		objectContainer.parent = transform;
 		xPosRange = (float)Screen.width / 4 + 12f;
 		yPosRange = (float)Screen.height / 4 + 20f;
-		colors[0] = Color.black;
+		colors[0] = Color.white;
 		colors[1] = Color.blue;
 		colors[2] = Color.cyan;
 		colors[3] = Color.gray;
 		colors[4] = Color.green;
 		colors[5] = Color.magenta;
-		colors[6] = Color.red;
+		colors[6] = Color.magenta;
 		colors[7] = Color.yellow;
-		colors[8] = Color.white;
+		colors[8] = Color.gray;
 		Invoke("SetBonusObject", Random.Range(5, 10));
 	}
 	
@@ -86,11 +91,10 @@ public class ObjectManager : MonoBehaviour {
 	public void AddObject(GroupType groupType) {
 		// Instatiate falling object		
 		objType = Random.Range(1, 9);  // We will use 8 correspond colors for random object type
-//		Debug.Log(Time.time + " adding object------ " + groupType + " object type " + objType + " color: " + colors[objType - 1]);		
 		go = new GameObject("FalliingObject");
 		obj = MyPoolManager.Spawn("NormalEnemy");
 		fallingObject = go.AddComponent<FallingObject>();
-//		obj.gameObject.layer = 10;
+		obj.transform.localScale = new Vector3 (objectNormalScale, objectNormalScale, objectNormalScale);
 		Utils.SetParent(go.transform, obj);
 		Utils.SetParent(objectContainer, go.transform);
 		go.transform.position = new Vector3(Random.Range(-xPosRange, xPosRange), yPosRange, 0);
@@ -147,7 +151,7 @@ public class ObjectManager : MonoBehaviour {
 			break;
 		}
 		
-		fallingObject.Init(this, obj, render, objType, (int)groupType, fallSpeed, fallOrbitType, fallRadius, gainedPoints);
+		fallingObject.Init(this, obj, render, objType, groupType, fallSpeed, fallOrbitType, fallRadius, gainedPoints);
 		fallingObjects.Add(fallingObject);
 		numObjects++;
 	}
@@ -190,6 +194,25 @@ public class ObjectManager : MonoBehaviour {
 			for (tmpVar = 0; tmpVar < numObjects; tmpVar++) {
 				fallingObjects[tmpVar].ChangeSpeed(false);
 			}
+		}
+	}
+
+	// Event: Object fall to floor
+	public void ObjectFallToFloor() {
+		if (!isGameObject) {
+			isGameObject = true;
+			numFailObject ++;
+			if (numFailObject >= 6) {
+				EventGameOver();
+				myController.EventGameOver();
+			}
+		}
+	}
+
+	// Event: Game over
+	void EventGameOver() {
+		for (tmpVar = 0; tmpVar < numObjects; tmpVar++) {
+			fallingObjects[tmpVar].Disapear(false);
 		}
 	}
 }

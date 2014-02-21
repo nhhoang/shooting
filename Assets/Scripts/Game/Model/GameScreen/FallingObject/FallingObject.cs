@@ -3,7 +3,7 @@ using System.Collections;
 
 public class FallingObject : MonoBehaviour {
 	private int objectType = 0;
-	private int groupType = 0;
+	private ObjectManager.GroupType groupType = 0;
 	private float fallSpeed = 1f;
 	private int fallOrbitType = 0;   // 0 - straight down, 1 - ziczac
 	private float fallRadius = 1f;
@@ -19,7 +19,7 @@ public class FallingObject : MonoBehaviour {
 	private Renderer render;
 	
 	// Init objects properties
-	public void Init(ObjectManager mana, Transform childTransform, Renderer objRenderer, int objType, int gType, float fSpeed, int fOrbitType, float fRadius, int gPoints) {
+	public void Init(ObjectManager mana, Transform childTransform, Renderer objRenderer, int objType, ObjectManager.GroupType gType, float fSpeed, int fOrbitType, float fRadius, int gPoints) {
 		isDestroy = false;
 		isBonusObject = false;
 		manager = mana;
@@ -30,7 +30,7 @@ public class FallingObject : MonoBehaviour {
 		fallRadius = fRadius;
 		gainedPoints = gPoints;
 		childTransform.GetComponent<FallingObjectVisibleCheck>().Init(this);
-		if (groupType == (int)ObjectManager.GroupType.EXPLODE) {
+		if (groupType == ObjectManager.GroupType.EXPLODE) {
 			randomType = objectType;
 			InvokeRepeating("ChangeRandomType", 0, 0.5f);
 		}
@@ -101,7 +101,7 @@ public class FallingObject : MonoBehaviour {
 	
 	// Check whether it can be bonus object
 	public bool CanBeBonusObject() {
-		if (!isDestroy && !isBonusObject && groupType != (int)ObjectManager.GroupType.FREEZE && groupType != (int)ObjectManager.GroupType.EXPLODE) {
+		if (!isDestroy && !isBonusObject && groupType != ObjectManager.GroupType.FREEZE && groupType != ObjectManager.GroupType.EXPLODE) {
 			isBonusObject = true;
 			// @TODO: hightlight object
 			gainedPoints *= 10;
@@ -116,17 +116,19 @@ public class FallingObject : MonoBehaviour {
 		if (!isDestroy) {
 			isDestroy = true;
 			CancelInvoke();
-			
 			if (isShoot) {
+				Debug.Log(groupType + " get shoot, isBonusObject " + isBonusObject);
 				GameData.UpdateScore(gainedPoints);
+			} else {
+				manager.ObjectFallToFloor();
 			}
 			
 			switch(groupType) {
-				case (int)ObjectManager.GroupType.FREEZE:
+				case ObjectManager.GroupType.FREEZE:
 					manager.EventFreezeObject(isShoot);
 				break;
 				
-				case (int)ObjectManager.GroupType.EXPLODE:
+				case ObjectManager.GroupType.EXPLODE:
 					manager.ExplodeObjectSameType(randomType, isShoot);
 				break;
 			}
