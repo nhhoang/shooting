@@ -15,19 +15,12 @@ using Uniject;
 namespace Unibill.Impl {
     public class StorekitMassImportTemplateGenerator {
 
-        private ProductIdRemapper remapper;
         private IEditorUtil util;
-        private InventoryDatabase db;
-        private string sku;
-        private XDocument inventoryDocument;
-        public StorekitMassImportTemplateGenerator(IResourceLoader loader,
-                                                   InventoryDatabase db, ProductIdRemapper remapper, IEditorUtil util) {
-            this.db = db;
-            this.remapper = remapper;
+        private UnibillConfiguration config;
+
+        public StorekitMassImportTemplateGenerator(UnibillConfiguration config, IEditorUtil util) {
+            this.config = config;
             this.util = util;
-            XDocument inventory = XDocument.Load(loader.openTextFile("unibillInventory"));
-            this.inventoryDocument = inventory;
-            this.sku = (string) inventory.XPathSelectElement("//iOSSKU");
         }
 
         public void writeFile () {
@@ -38,7 +31,7 @@ namespace Unibill.Impl {
             string path = Path.Combine (directory, "MassImportTemplate.txt");
             using (StreamWriter writer = new StreamWriter(path, false)) {
                 writer.WriteLine (getHeaderLine ());
-                foreach (PurchasableItem item in db.AllPurchasableItems) {
+                foreach (PurchasableItem item in config.AllPurchasableItems) {
                     if (PurchaseType.Subscription != item.PurchaseType) {
                         writer.WriteLine(serialisePurchasable(item));
                     }
@@ -62,23 +55,21 @@ namespace Unibill.Impl {
         }
 
         public string serialisePurchasable (PurchasableItem item) {
-            XElement element = inventoryDocument.XPathSelectElement(string.Format ("//item[@id='{0}']", item.Id));
-            XElement screenshotElement = element.XPathSelectElement("platforms/AppleAppStore/screenshotPath");
-            string screenshotPath = string.Empty;
-            if (screenshotElement == null) {
-//                logger.Log ("Missing screenshot for purchasable:{0}", item.id);
-            } else {
-                string templatePath = "Assets/Plugins/unibill/generated/storekit/MassImportTemplate";
-                templatePath = new FileInfo (templatePath).FullName;
-                screenshotPath = new FileInfo (util.guidToAssetPath((string)screenshotElement)).FullName;
+            string screenshotPath = item.platformBundles[BillingPlatform.AppleAppStore].get<string>("screenshotPath");
+
+            string templatePath = "Assets/Plugins/unibill/generated/storekit/MassImportTemplate";
+            templatePath = new FileInfo (templatePath).FullName;
+            screenshotPath = string.Empty;
+            if (!string.IsNullOrEmpty(screenshotPath)) {
+                screenshotPath = new FileInfo(util.guidToAssetPath((string)screenshotPath)).FullName;
             }
             var records = new string[] {
-                sku,
-                remapper.mapItemIdToPlatformSpecificId(item),
-                remapper.mapItemIdToPlatformSpecificId(item), // This is the 'reference' field that is used to refer to the product within iTunes connect.
+                this.config.iOSSKU,
+                item.LocalIds[BillingPlatform.AppleAppStore],
+                item.LocalIds[BillingPlatform.AppleAppStore], // This is the 'reference' field that is used to refer to the product within iTunes connect.
                 item.PurchaseType == PurchaseType.Consumable ? "Consumable" : "Non-Consumable",
                 "yes",
-                (string) element.XPathSelectElement("platforms/AppleAppStore/appleAppStorePriceTier"),
+                item.platformBundles[BillingPlatform.AppleAppStore].getString("appleAppStorePriceTier"),
                 item.name,
                 item.description,
                 screenshotPath,

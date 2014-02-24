@@ -13,7 +13,7 @@ namespace Unibill.Impl {
         private AndroidJavaObject plugin;
 #endif
 
-        public void initialise(GooglePlayBillingService callback, string publicKey) {
+        public void initialise(GooglePlayBillingService callback, string publicKey, string[] productIds) {
 #if UNITY_ANDROID
             // Setup our GameObject to listen to events from the Java plugin.
             new GameObject().AddComponent<GooglePlayCallbackMonoBehaviour>().Initialise(callback);
@@ -35,5 +35,11 @@ namespace Unibill.Impl {
             plugin.Call("purchaseProduct", id);
 #endif
         }
+		
+		public void pollForConsumables () {
+#if UNITY_ANDROID
+			plugin.Call ("pollForConsumables");
+#endif
+		}
     }
 }

@@ -15,7 +15,7 @@ namespace Unibill.Impl {
         void initialise(AppleAppStoreBillingService callback);
 
         bool storeKitPaymentsAvailable();
-        void storeKitRequestProductData (string productIdentifiers);
+        void storeKitRequestProductData (string productIdentifiers, string[] productIds);
         void storeKitPurchaseProduct (string productId);
         void storeKitRestoreTransactions();
     }

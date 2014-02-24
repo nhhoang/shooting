@@ -8,6 +8,7 @@ using System.Collections;
 using System.Collections.Generic;
 using Uniject;
 using Unibill;
+using Unibill.Impl;
 using UnityEngine;
 
 
@@ -18,7 +19,7 @@ namespace Unibill.Impl {
         private IRawGooglePlayInterface rawInterface;
         private IBillingServiceCallback callback;
         private ProductIdRemapper remapper;
-        private InventoryDatabase db;
+        private UnibillConfiguration db;
         private ILogger logger;
 
         private HashSet<string> unknownAmazonProducts = new HashSet<string>();
@@ -26,12 +27,11 @@ namespace Unibill.Impl {
         public GooglePlayBillingService (IRawGooglePlayInterface rawInterface,
                                          UnibillConfiguration config,
                                          ProductIdRemapper remapper,
-                                         InventoryDatabase db,
                                          ILogger logger) {
             this.rawInterface = rawInterface;
             this.publicKey = config.GooglePlayPublicKey;
             this.remapper = remapper;
-            this.db = db;
+            this.db = config;
             this.logger = logger;
         }
 
@@ -43,19 +43,22 @@ namespace Unibill.Impl {
                 return;
             }
 
-            var encoder = new Hashtable ();
+            var encoder = new Dictionary<string, object>();
             encoder.Add ("publicKey", this.publicKey);
-            ArrayList products = new ArrayList ();
+            var productIds = new List<string>();
+            List<object> products = new List<object>();
             foreach (var item in db.AllPurchasableItems) {
-                Hashtable product = new Hashtable ();
-                product.Add ("productId", remapper.mapItemIdToPlatformSpecificId (item));
+                Dictionary<string, object> product = new Dictionary<string, object>();
+                var id = remapper.mapItemIdToPlatformSpecificId(item);
+                productIds.Add(id);
+                product.Add ("productId", id);
                 product.Add ("consumable", item.PurchaseType == PurchaseType.Consumable);
                 products.Add (product);
             }
             encoder.Add("products", products);
 
             var json = encoder.toJson();
-            rawInterface.initialise(this, json);
+            rawInterface.initialise(this, json, productIds.ToArray());
         }
 
         public void restoreTransactions () {
@@ -80,7 +83,7 @@ namespace Unibill.Impl {
         }
 
         public void onPurchaseSucceeded(string json) {
-            Hashtable response = (Hashtable)MiniJSON.jsonDecode (json);
+            Dictionary<string, object> response = (Dictionary<string, object>)Unibill.Impl.MiniJSON.jsonDecode(json);
 
             callback.onPurchaseSucceeded ((string)response["productId"], (string) response ["signature"]);
         }
@@ -112,7 +115,7 @@ namespace Unibill.Impl {
 
         public void onProductListReceived (string productListString) {
 
-            Hashtable response = (Hashtable)MiniJSON.jsonDecode (productListString);
+            Dictionary<string, object> response = (Dictionary<string, object>)Unibill.Impl.MiniJSON.jsonDecode(productListString);
 
             if (response.Count == 0) {
                 callback.logError (UnibillError.GOOGLEPLAY_NO_PRODUCTS_RETURNED);
@@ -124,7 +127,7 @@ namespace Unibill.Impl {
             foreach (var identifier in response.Keys) {
                 if (remapper.canMapProductSpecificId(identifier.ToString())) {
                     var item = remapper.getPurchasableItemFromPlatformSpecificId(identifier.ToString());
-                    Hashtable details = (Hashtable) response[identifier];
+                    Dictionary<string, object> details = (Dictionary<string, object>)response[identifier];
 
                     PurchasableItem.Writer.setLocalizedPrice(item,  details["price"].ToString());
                     PurchasableItem.Writer.setLocalizedTitle(item, (string) details["localizedTitle"]);
@@ -140,13 +143,18 @@ namespace Unibill.Impl {
             if (productsNotReceived.Count > 0) {
                 foreach (PurchasableItem product in productsNotReceived) {
                     this.unknownAmazonProducts.Add(remapper.mapItemIdToPlatformSpecificId(product));
-                    callback.logError(UnibillError.AMAZONAPPSTORE_GETITEMDATAREQUEST_MISSING_PRODUCT, product.Id, remapper.mapItemIdToPlatformSpecificId(product));
+                    callback.logError(UnibillError.GOOGLEPLAY_MISSING_PRODUCT, product.Id, remapper.mapItemIdToPlatformSpecificId(product));
                 }
             }
-
-            callback.onSetupComplete(true);
+			
+			logger.Log("Received product list, polling for consumables...");
+			rawInterface.pollForConsumables();
         }
-
+		
+		public void onPollForConsumablesFinished() {
+			logger.Log("Finished poll for consumables, completing init.");
+	        callback.onSetupComplete(true);
+		}
     }
 }
 

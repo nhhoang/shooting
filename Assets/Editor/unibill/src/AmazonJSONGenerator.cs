@@ -4,6 +4,7 @@
 //  www.outlinegames.com
 //-----------------------------------------------------------------
 using System;
+using System.IO;
 using System.Collections;
 using System.Collections.Generic;
 using Unibill;
@@ -17,13 +18,16 @@ public class AmazonJSONGenerator {
         remapper.initialiseForPlatform(BillingPlatform.AmazonAppstore);
     }
 
-    public string encodeAll () {
-        Hashtable result = new Hashtable();
-        foreach (PurchasableItem item in remapper.db.AllPurchasableItems) {
+    public void encodeAll () {
+        var result = new Dictionary<string, object>();
+		foreach (PurchasableItem item in remapper.db.AllPurchasableItems) {
             result[remapper.mapItemIdToPlatformSpecificId (item)] = purchasableDetailsToHashtable (item);
         }
 
-        return Unibill.Impl.MiniJSON.jsonEncode(result);
+        var json = result.nJson();
+		using (StreamWriter o = new StreamWriter("Assets/Plugins/unibill/resources/amazon.sdktester.json.txt")) {
+			o.Write(json);
+		}
     }
 
     public Hashtable purchasableDetailsToHashtable (PurchasableItem item) {

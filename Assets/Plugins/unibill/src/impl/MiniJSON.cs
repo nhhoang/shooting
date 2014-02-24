@@ -30,6 +30,7 @@ using System;
 using System.Collections;
 using System.Text;
 using System.Collections.Generic;
+using System.Globalization;
 
 
 /* Based on the JSON parser from 
@@ -42,7 +43,7 @@ using System.Collections.Generic;
 /// This class encodes and decodes JSON strings.
 /// Spec. details, see http://www.json.org/
 /// 
-/// JSON uses Arrays and Objects. These correspond here to the datatypes ArrayList and Hashtable.
+/// JSON uses Arrays and Objects. These correspond here to the datatypes ArrayList and Dictionary<string, object>.
 /// All numbers are parsed to doubles.
 /// </summary>
 
@@ -75,7 +76,7 @@ namespace Unibill.Impl {
     	/// Parses the string json into a value
     	/// </summary>
     	/// <param name="json">A JSON string.</param>
-    	/// <returns>An ArrayList, a Hashtable, a double, a string, null, true, or false</returns>
+        /// <returns>An ArrayList, a Dictionary<string, object>, a double, a string, null, true, or false</returns>
     	public static object jsonDecode( string json )
     	{
     		// save the string for debug information
@@ -103,9 +104,9 @@ namespace Unibill.Impl {
 
 
     	/// <summary>
-    	/// Converts a Hashtable / ArrayList / Dictionary(string,string) object into a JSON string
+        /// Converts a Dictionary<string, object> / ArrayList / Dictionary(string,string) object into a JSON string
     	/// </summary>
-    	/// <param name="json">A Hashtable / ArrayList</param>
+        /// <param name="json">A Dictionary<string, object> / ArrayList</param>
     	/// <returns>A JSON encoded string, or null if object 'json' is not serializable</returns>
     	public static string jsonEncode( object json )
     	{
@@ -164,9 +165,9 @@ namespace Unibill.Impl {
     	
     	#region Parsing
     	
-    	protected static Hashtable parseObject( char[] json, ref int index )
+    	protected static Dictionary<string, object> parseObject( char[] json, ref int index )
     	{
-    		Hashtable table = new Hashtable();
+            Dictionary<string, object> table = new Dictionary<string, object>();
     		int token;
 
     		// {
@@ -217,9 +218,9 @@ namespace Unibill.Impl {
     	}
 
     	
-    	protected static ArrayList parseArray( char[] json, ref int index )
+    	protected static List<object> parseArray( char[] json, ref int index )
     	{
-    		ArrayList array = new ArrayList();
+            List<object> array = new List<object>();
 
     		// [
     		nextToken( json, ref index );
@@ -392,7 +393,7 @@ namespace Unibill.Impl {
 
     		Array.Copy( json, index, numberCharArray, 0, charLength );
     		index = lastIndex + 1;
-    		return Double.Parse( new string( numberCharArray ) ); // , CultureInfo.InvariantCulture);
+			return Double.Parse( new string( numberCharArray), CultureInfo.InvariantCulture ); // , CultureInfo.InvariantCulture);
     	}
     	
     	
@@ -519,13 +520,13 @@ namespace Unibill.Impl {
     	
     	protected static bool serializeObjectOrArray( object objectOrArray, StringBuilder builder )
     	{
-    		if( objectOrArray is Hashtable )
+            if (objectOrArray is Dictionary<string, object>)
     		{
-    			return serializeObject( (Hashtable)objectOrArray, builder );
+                return serializeObject((Dictionary<string, object>)objectOrArray, builder);
     		}
-    		else if( objectOrArray is ArrayList )
+            else if (objectOrArray is List<object>)
     			{
-    				return serializeArray( (ArrayList)objectOrArray, builder );
+                    return serializeArray((List<object>)objectOrArray, builder);
     			}
     			else
     			{
@@ -533,8 +534,8 @@ namespace Unibill.Impl {
     			}
     	}
 
-    	
-    	protected static bool serializeObject( Hashtable anObject, StringBuilder builder )
+
+        protected static bool serializeObject(Dictionary<string, object> anObject, StringBuilder builder)
     	{
     		builder.Append( "{" );
 
@@ -585,9 +586,9 @@ namespace Unibill.Impl {
     		builder.Append( "}" );
     		return true;
     	}
-    	
-    	
-    	protected static bool serializeArray( ArrayList anArray, StringBuilder builder )
+
+
+        protected static bool serializeArray(List<object> anArray, StringBuilder builder)
     	{
     		builder.Append( "[" );
 
@@ -625,7 +626,7 @@ namespace Unibill.Impl {
     		}
     		else if( value.GetType().IsArray )
     		{
-    			serializeArray( new ArrayList( (ICollection)value ), builder );
+                serializeArray(new List<object>((object[])value), builder);
     		}
     		else if( value is string )
     		{
@@ -639,17 +640,17 @@ namespace Unibill.Impl {
     		{
     			serializeString( Convert.ToString( (decimal)value ), builder );
     		}
-    		else if( value is Hashtable )
+            else if (value is Dictionary<string, object>)
     		{
-    			serializeObject( (Hashtable)value, builder );
+                serializeObject((Dictionary<string, object>)value, builder);
     		}
     		else if( value is Dictionary<string,string> )
     		{
     			serializeDictionary( (Dictionary<string,string>)value, builder );
     		}
-    		else if( value is ArrayList )
+            else if (value is List<object>)
     		{
-    			serializeArray( (ArrayList)value, builder );
+                serializeArray((List<object>)value, builder);
     		}
     		else if( ( value is Boolean ) && ( (Boolean)value == true ) )
     		{
@@ -658,10 +659,6 @@ namespace Unibill.Impl {
     		else if( ( value is Boolean ) && ( (Boolean)value == false ) )
     		{
     			builder.Append( "false" );
-    		}
-    		else if( value.GetType().IsPrimitive )
-    		{
-    			serializeNumber( Convert.ToDouble( value ), builder );
     		}
     		else
     		{
@@ -741,7 +738,43 @@ namespace Unibill.Impl {
 
     public static class MiniJsonExtensions
     {
-    	public static string toJson( this Hashtable obj )
+        public static Dictionary<string, object> getHash(this Dictionary<string, object> dic, string key) {
+            return (Dictionary<string, object>) dic[key];
+        }
+
+        public static T getEnum<T>(this Dictionary<string, object> dic, string key) {
+            if (dic.ContainsKey(key)) {
+                return (T) Enum.Parse(typeof(T), dic[key].ToString(), true);
+            }
+
+            return default(T);
+        }
+
+        public static string getString(this Dictionary<string, object> dic, string key) {
+            if (dic.ContainsKey(key)) {
+                return dic[key].ToString();
+            }
+
+            return string.Empty;
+        }
+
+        public static bool getBool(this Dictionary<string, object> dic, string key) {
+            if (dic.ContainsKey(key)) {
+                return bool.Parse(dic[key].ToString());
+            }
+
+            return false;
+        }
+
+        public static T get<T>(this Dictionary<string, object> dic, string key) {
+            if (dic.ContainsKey(key)) {
+                return (T) dic[key];
+            }
+
+            return default(T);
+        }
+
+        public static string toJson(this Dictionary<string, object> obj)
     	{
     		return MiniJSON.jsonEncode( obj );
     	}
@@ -751,20 +784,18 @@ namespace Unibill.Impl {
     	{
     		return MiniJSON.jsonEncode( obj );
     	}
-    	
-    	
-    	public static ArrayList arrayListFromJson( this string json )
+
+
+        public static List<object> arrayListFromJson(this string json)
     	{
-    		return MiniJSON.jsonDecode( json ) as ArrayList;
+            return MiniJSON.jsonDecode(json) as List<object>;
     	}
 
 
-    	public static Hashtable hashtableFromJson( this string json )
+        public static Dictionary<string, object> hashtableFromJson(this string json)
     	{
-    		return MiniJSON.jsonDecode( json ) as Hashtable;
+            return MiniJSON.jsonDecode(json) as Dictionary<string, object>;
     	}
     }
 }
 #endregion
-
-

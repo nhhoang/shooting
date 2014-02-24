@@ -138,10 +138,38 @@
         
         for (SKProduct* product in validProducts) {
             NSMutableDictionary* entry = [[NSMutableDictionary alloc] init];
-            [entry setObject:product.price forKey:@"price"];
-            [entry setObject:[product.priceLocale localeIdentifier] forKey:@"priceLocale"];
-            [entry setObject:product.localizedTitle forKey:@"localizedTitle"];
-            [entry setObject:product.localizedDescription forKey:@"localizedDescription"];
+            
+            NSNumberFormatter *numberFormatter = [[NSNumberFormatter alloc] init];
+            [numberFormatter setFormatterBehavior:NSNumberFormatterBehavior10_4];
+            [numberFormatter setNumberStyle:NSNumberFormatterCurrencyStyle];
+            [numberFormatter setLocale:product.priceLocale];
+            NSString *formattedString = [numberFormatter stringFromNumber:product.price];
+            [numberFormatter release];
+            
+            if (NULL == product.productIdentifier) {
+                NSLog(@"Unibill: Product is missing an identifier!");
+                continue;
+            }
+            
+            if (NULL == formattedString) {
+                NSLog(@"Unibill: Unable to format a localized price");
+                [entry setObject:@"" forKey:@"price"];
+            } else {
+                [entry setObject:formattedString forKey:@"price"];
+            }
+            if (NULL == product.localizedTitle) {
+                NSLog(@"Unibill: no localized title for: %@. Have your products been disapproved in itunes connect?", product.productIdentifier);
+                [entry setObject:@"" forKey:@"localizedTitle"];
+            } else {
+                [entry setObject:product.localizedTitle forKey:@"localizedTitle"];
+            }
+            
+            if (NULL == product.localizedDescription) {
+                NSLog(@"Unibill: no localized description for: %@. Have your products been disapproved in itunes connect?", product.productIdentifier);
+                [entry setObject:@"" forKey:@"localizedTitle"];
+            } else {
+                [entry setObject:product.localizedDescription forKey:@"localizedDescription"];
+            }
             
             [dic setObject:entry forKey:product.productIdentifier];
         }
@@ -150,7 +178,7 @@
         NSString* result = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
         
         UnitySendMessage(UNITY_GAMEOBJECT_NAME, "onProductListReceived", [result UTF8String]);
-        [result dealloc];
+        [result release];
 	} else {
         if (0 == [response.invalidProductIdentifiers count]) {
             // It seems we got no response at all.
@@ -205,6 +233,7 @@
                 
                 NSString* receipt;
                 receipt = [[NSString alloc] initWithData:transaction.transactionReceipt encoding: NSUTF8StringEncoding];
+
                 [dic setObject:receipt forKey:@"receipt"];
                 
                 NSData* data;
@@ -214,13 +243,13 @@
                 
                 UnitySendMessage(UNITY_GAMEOBJECT_NAME, "onProductPurchaseSuccess", result.UTF8String);
                 
-                [receipt dealloc];
-                [dic dealloc];
+                [receipt release];
+                [dic release];
                 
 				// After customer has successfully received purchased content,
 				// remove the finished transaction from the payment queue.
 				[[SKPaymentQueue defaultQueue] finishTransaction: transaction];
-			break;
+                break;
                 
 			case SKPaymentTransactionStateFailed:
 				// Purchase was either cancelled by user or an error occurred.
@@ -288,8 +317,8 @@
             
             UnitySendMessage(UNITY_GAMEOBJECT_NAME, "onProductPurchaseSuccess", result.UTF8String);
             
-            [receipt dealloc];
-            [dic dealloc];
+            [receipt release];
+            [dic release];
         }
     }
     

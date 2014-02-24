@@ -5,6 +5,9 @@
 //-----------------------------------------------------------------
 using System;
 using Unibill;
+using Unibill.Impl;
+using Uniject;
+using Uniject.Impl;
 
 public enum UnibillState {
     SUCCESS,
@@ -55,6 +58,32 @@ public class Unibiller {
     /// </summary>
     public static event Action<bool> onTransactionsRestored;
 
+	/// <summary>
+	/// Gets the specific billing platform in use; Google Play, Amazon, Storekit etc.
+	/// </summary>
+	/// <value>The billing platform.</value>
+	public static BillingPlatform BillingPlatform {
+		get {
+			if (null != biller) {
+				return biller.InventoryDatabase.CurrentPlatform;
+			}
+			return BillingPlatform.UnityEditor;
+		}
+	}
+	
+	/// <summary>
+	/// Is Unibill initialised and ready to make purchases.
+	/// </summary>
+	public static bool Initialised {
+		get {
+			if (null != biller) {
+				return biller.State == BillerState.INITIALISED ||
+					biller.State == BillerState.INITIALISED_WITH_ERROR;
+			}
+			return false;
+		}
+	}
+
     /// <summary>
     /// Initialise Unibill.
     /// Before calling this method, ensure you have subscribed to onBillerReady to
@@ -63,7 +92,9 @@ public class Unibiller {
     /// </summary>
     public static void Initialise () {
         if (Unibiller.biller == null) {
-            _internal_doInitialise(Biller.instantiate());
+            var mgr = new RemoteConfigManager(new UnityResourceLoader(), new UnityPlayerPrefsStorage(), new UnityLogger(), UnityEngine.Application.platform);
+            var config = mgr.Config;
+            _internal_doInitialise(new BillerFactory(new UnityResourceLoader(), new UnityLogger(), new UnityPlayerPrefsStorage(), new RawBillingPlatformProvider(config), config).instantiate());
         }
     }
 
@@ -110,6 +141,13 @@ public class Unibiller {
     public static PurchasableItem[] AllSubscriptions {
         get { return biller.InventoryDatabase.AllSubscriptions.ToArray (); }
     }
+
+	/// <summary>
+	/// Get the identifiers of all currencies managed by Unibill.
+	/// </summary>
+	public static string[] AllCurrencies {
+		get { return biller.CurrencyIdentifiers; }
+	}
 
     /// <summary>
     /// Get the specified PurchasableItem by its Unibill identifier,
@@ -182,6 +220,29 @@ public class Unibiller {
         return 0;
     }
 
+	/// <summary>
+	/// Gets the balance for the specified Unibill managed currency.
+	/// </summary>
+	/// <returns>The currency balance or 0 if the currency is unknown.</returns>
+	public static decimal GetCurrencyBalance(string currencyIdentifier) {
+		return biller.getCurrencyBalance (currencyIdentifier);
+	}
+
+	/// <summary>
+	/// Credits the specified currency by the specified amount.
+	/// </summary>
+	public static void CreditBalance(string currencyIdentifier, decimal amount) {
+		biller.creditCurrencyBalance(currencyIdentifier, amount);
+	}
+
+	/// <summary>
+	/// Debits the balance.
+	/// </summary>
+	/// <returns><c>true</c>, if balance was debited (sufficient funds were available), <c>false</c> otherwise.</returns>
+	public static bool DebitBalance(string currencyIdentifier, decimal amount) {
+		return biller.debitCurrencyBalance (currencyIdentifier, amount);
+	}
+
     /// <summary>
     /// Initiate a restore of all purchased items the user has previously purchased,
     /// whether on this device or another.
@@ -227,12 +288,43 @@ public class Unibiller {
             }
         };
         
-        biller.onPurchaseCancelled += onPurchaseCancelled;
-        biller.onPurchaseComplete += onPurchaseComplete;
-        biller.onPurchaseFailed += onPurchaseFailed;
-        biller.onPurchaseRefunded += onPurchaseRefunded;
-        biller.onTransactionsRestored += onTransactionsRestored;
+
+        biller.onPurchaseCancelled += _onPurchaseCancelled;
+        biller.onPurchaseComplete += _onPurchaseComplete;
+        biller.onPurchaseFailed += _onPurchaseFailed;
+        biller.onPurchaseRefunded += _onPurchaseRefunded;
+        biller.onTransactionsRestored += _onTransactionsRestored;
 
         biller.Initialise();
     }
+
+	private static void _onPurchaseCancelled(PurchasableItem item) {
+		if (null != onPurchaseCancelled) {
+			onPurchaseCancelled (item);
+		}
+	}
+
+	private static void _onPurchaseComplete(PurchasableItem item) {
+		if (null != onPurchaseComplete) {
+			onPurchaseComplete (item);
+		}
+	}
+
+	private static void _onPurchaseFailed(PurchasableItem item) {
+		if (null != onPurchaseFailed) {
+			onPurchaseFailed (item);
+		}
+	}
+
+	private static void _onPurchaseRefunded(PurchasableItem item) {
+		if (null != onPurchaseRefunded) {
+			onPurchaseRefunded (item);
+		}
+	}
+
+	private static void _onTransactionsRestored(bool success) {
+		if (null != onTransactionsRestored) {
+			onTransactionsRestored (success);
+		}
+	}
 }

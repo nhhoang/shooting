@@ -27,12 +27,13 @@ namespace Unibill {
     /// Purchase events are logged in the transaction database.
     /// </summary>
     public class Biller : IBillingServiceCallback {
-        public InventoryDatabase InventoryDatabase { get; private set; }
+        public UnibillConfiguration InventoryDatabase { get; private set; }
         private TransactionDatabase transactionDatabase;
         private ILogger logger;
         private HelpCentre help;
         private ProductIdRemapper remapper;
         private Dictionary<PurchasableItem, List<string>> receiptMap = new Dictionary<PurchasableItem, List<string>>();
+		private CurrencyManager currencyManager;
         public IBillingService billingSubsystem { get; private set; }
 
         public event Action<bool> onBillerReady;
@@ -48,8 +49,14 @@ namespace Unibill {
             get { return State == BillerState.INITIALISED || State == BillerState.INITIALISED_WITH_ERROR; }
         }
 
-        public Biller (InventoryDatabase db, TransactionDatabase tDb, IBillingService billingSubsystem, ILogger logger, HelpCentre help, ProductIdRemapper remapper) {
-            this.InventoryDatabase = db;
+		public string[] CurrencyIdentifiers {
+			get {
+				return currencyManager.Currencies;
+			}
+		}
+
+        public Biller (UnibillConfiguration config, TransactionDatabase tDb, IBillingService billingSubsystem, ILogger logger, HelpCentre help, ProductIdRemapper remapper, CurrencyManager currencyManager) {
+            this.InventoryDatabase = config;
             this.transactionDatabase = tDb;
             this.billingSubsystem = billingSubsystem;
             this.logger = logger;
@@ -57,6 +64,7 @@ namespace Unibill {
             this.help = help;
             this.Errors = new List<UnibillError> ();
             this.remapper = remapper;
+			this.currencyManager = currencyManager;
         }
 
         public void Initialise () {
@@ -76,6 +84,18 @@ namespace Unibill {
         public int getPurchaseHistory (string purchasableId) {
             return getPurchaseHistory(InventoryDatabase.getItemById(purchasableId));
         }
+
+		public decimal getCurrencyBalance(string identifier) {
+            return currencyManager.GetCurrencyBalance(identifier);
+		}
+
+		public void creditCurrencyBalance(string identifier, decimal amount) {
+            currencyManager.CreditBalance(identifier, amount);
+		}
+
+		public bool debitCurrencyBalance(string identifier, decimal amount) {
+            return currencyManager.DebitBalance(identifier, amount);
+		}
 
         public string[] getReceiptsForPurchasable (PurchasableItem item) {
             if (receiptMap.ContainsKey (item)) {
@@ -133,6 +153,7 @@ namespace Unibill {
             PurchasableItem item = remapper.getPurchasableItemFromPlatformSpecificId(id);
             logger.Log("onPurchaseSucceeded({0})", item.Id);
             transactionDatabase.onPurchase (item);
+			currencyManager.OnPurchased (item.Id);
             if (null != onPurchaseComplete) {
                 onPurchaseComplete (item);
             }
@@ -224,129 +245,12 @@ namespace Unibill {
             logger.LogError(help.getMessage(error), args);
         }
 
-        public static Biller instantiate() {
-            IBillingService svc = instantiateBillingSubsystem();
-
-            var biller = new Biller(getInventory(), getTransactionDatabase(), svc, getLogger(), getHelp(), getMapper());
-            return biller;
-        }
-
-        private static TransactionDatabase _tDb;
-        private static TransactionDatabase getTransactionDatabase () {
-            if (null == _tDb) {
-                _tDb = new TransactionDatabase(getStorage(), getLogger());
-            }
-            return _tDb;
-        }
-
-        private static IStorage _storage;
-        private static IStorage getStorage () {
-            if (null == _storage) {
-                _storage = new UnityPlayerPrefsStorage();
-            }
-            return _storage;
-        }
-
         private bool verifyPlatformId (string platformId) {
             if (!remapper.canMapProductSpecificId (platformId)) {
                 logError(UnibillError.UNIBILL_UNKNOWN_PRODUCTID, platformId);
                 return false;
             }
             return true;
-        }
-
-        private static IBillingService instantiateBillingSubsystem () {
-            if (Application.platform == RuntimePlatform.WindowsPlayer || Application.isEditor) {
-                return new Tests.FakeBillingService(getMapper());
-            }
-            switch (getConfig ().CurrentPlatform) {
-            case BillingPlatform.AppleAppStore:
-                return new AppleAppStoreBillingService(getInventory(), getMapper(), getStorekit());
-            case BillingPlatform.AmazonAppstore:
-                return new AmazonAppStoreBillingService(getAmazon(), getMapper(), getInventory(), getTransactionDatabase(), getLogger());
-            case BillingPlatform.GooglePlay:
-                return new GooglePlayBillingService(getGooglePlay(), getConfig(), getMapper(), getInventory(), getLogger());
-			case BillingPlatform.MacAppStore:
-				return new AppleAppStoreBillingService(getInventory(), getMapper(), getStorekit());
-            }
-
-            throw new ArgumentException(getConfig().CurrentPlatform.ToString());
-        }
-
-        private static IRawGooglePlayInterface getGooglePlay () {
-            if (Application.isEditor) {
-                return new FakeGooglePlayPlugin(getInventory(), getMapper());
-            }
-            return new RawGooglePlayInterface();
-        }
-
-        private static IRawAmazonAppStoreBillingInterface getAmazon () {
-            return Application.isEditor ? (IRawAmazonAppStoreBillingInterface) new FakeRawAmazonAppStoreBillingInterface() : (IRawAmazonAppStoreBillingInterface) new RawAmazonAppStoreBillingInterface(getConfig());
-        }
-
-        private static IStoreKitPlugin getStorekit() {
-			if (Application.isEditor) {
-				return new FakeStorekitPlugin(getInventory(), getMapper());
-			} else if (Application.platform == RuntimePlatform.IPhonePlayer) {
-				return new StoreKitPluginImpl();
-			}
-			
-			return new OSXStoreKitPluginImpl();
-        }
-
-        private static HelpCentre _helpCentre;
-        private static HelpCentre getHelp () {
-            if (null == _helpCentre) {
-                _helpCentre = new HelpCentre(getParser());
-            }
-
-            return _helpCentre;
-        }
-
-        private static InventoryDatabase _inventory;
-        private static InventoryDatabase getInventory () {
-            if (null == _inventory) {
-                _inventory = new InventoryDatabase(getParser(), getLogger());
-            }
-
-            return _inventory;
-        }
-
-        private static ProductIdRemapper _remapper;
-        private static ProductIdRemapper getMapper () {
-            if (null == _remapper) {
-                _remapper = new ProductIdRemapper(getInventory(), getParser(), getConfig());
-            }
-
-            return _remapper;
-        }
-
-        private static ILogger getLogger () {
-            return new UnityLogger();
-        }
-
-        private static UnibillXmlParser getParser() {
-            return new UnibillXmlParser(new Mono.Xml.SmallXmlParser(), getResourceLoader());
-        }
-
-        private static UnibillConfiguration _config;
-        private static UnibillConfiguration getConfig () {
-            if (_config == null) {
-                _config = new UnibillConfiguration(getResourceLoader(), getParser(), getUtil(), getLogger());
-            }
-            return _config;
-        }
-
-        private static IUtil getUtil () {
-            return new UnityUtil();
-        }
-
-        private static IResourceLoader _resourceLoader;
-        private static IResourceLoader getResourceLoader () {
-            if (null == _resourceLoader) {
-                _resourceLoader = new UnityResourceLoader();
-            }
-            return _resourceLoader;
         }
     }
 }

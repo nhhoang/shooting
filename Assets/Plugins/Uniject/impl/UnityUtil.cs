@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using UnityEngine;
+using Unibill.Impl;
 
 public class UnityUtil : Uniject.IUtil {
 
@@ -37,6 +38,10 @@ public class UnityUtil : Uniject.IUtil {
 
     public RuntimePlatform Platform {
         get { return Application.platform; }
+    }
+
+    public bool IsEditor {
+        get { return Application.isEditor; }
     }
 
     private static List<RuntimePlatform> PCControlledPlatforms = new List<RuntimePlatform>() {

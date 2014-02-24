@@ -11,6 +11,7 @@ using System.Reflection;
 namespace Unibill.Impl {
     public class OSXStoreKitPluginImpl : IStoreKitPlugin {
 
+#if UNITY_STANDALONE
         [DllImport("unibillosx")]
         private static extern bool _storeKitPaymentsAvailable();
         
@@ -22,9 +23,9 @@ namespace Unibill.Impl {
         
         [DllImport("unibillosx")]
         private static extern void _storeKitRestoreTransactions();
-		
-		private static AppleAppStoreBillingService callback;
-		
+#endif
+        private static AppleAppStoreBillingService callback;
+
 		#region IStoreKitPlugin implementation
 		public void initialise (AppleAppStoreBillingService callback)
 		{
@@ -33,16 +34,32 @@ namespace Unibill.Impl {
 		#endregion		
 		
         public bool storeKitPaymentsAvailable () {
+            #if UNITY_STANDALONE
             return _storeKitPaymentsAvailable();
+            #else
+            throw new NotImplementedException();
+            #endif
         }
-        public void storeKitRequestProductData (string productIdentifiers) {
+        public void storeKitRequestProductData (string productIdentifiers, string[] productIds) {
+                        #if UNITY_STANDALONE
             _storeKitRequestProductData(productIdentifiers);
+                        #else
+            throw new NotImplementedException();
+            #endif
         }
         public void storeKitPurchaseProduct (string productId) {
+                        #if UNITY_STANDALONE
             _storeKitPurchaseProduct(productId);
+                        #else
+            throw new NotImplementedException();
+            #endif
         }
         public void storeKitRestoreTransactions () {
+                        #if UNITY_STANDALONE
             _storeKitRestoreTransactions();
+#else
+            throw new NotImplementedException();
+#endif
         }
 	
 		// Callbacks from native.

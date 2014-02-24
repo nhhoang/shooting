@@ -17,7 +17,7 @@ namespace Uniject.Impl {
 
     	#region ILogger implementation
     	public void Log(string message) {
-            // UnityEngine.Debug.Log(formatMessage(message)); // Removed to avoid filling the Unity log. Uncomment to get complete tracing information.
+            UnityEngine.Debug.Log(formatMessage(message)); // Removed to avoid filling the Unity log. Uncomment to get complete tracing information.
     	}
 
         public void Log(string message, object[] args) {

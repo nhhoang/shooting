@@ -5,7 +5,6 @@
 //-----------------------------------------------------------------
 using System;
 using Unibill;
-using Ninject;
 using Unibill.Impl;
 using System.Xml;
 using System.Xml.Linq;
@@ -21,16 +20,11 @@ namespace Unibill.Impl {
     public class GooglePlayCSVGenerator {
 
         private IEditorUtil util;
-        private ProductIdRemapper remapper;
-        private InventoryDatabase db;
-        private XDocument inventory;
+        private UnibillConfiguration config;
 
-        public GooglePlayCSVGenerator (IEditorUtil util, ProductIdRemapper remapper, InventoryDatabase db, IResourceLoader loader) {
+        public GooglePlayCSVGenerator (IEditorUtil util, UnibillConfiguration config) {
             this.util = util;
-            this.remapper = remapper;
-            this.db = db;
-            remapper.initialiseForPlatform(BillingPlatform.GooglePlay);
-            this.inventory = XDocument.Load(loader.openTextFile("unibillInventory"));
+            this.config = config;
         }
 
         public string getHeaderRow() {
@@ -53,7 +47,7 @@ namespace Unibill.Impl {
             string path = Path.Combine (directory, "MassImportCSV.txt");
             using (StreamWriter writer = new StreamWriter(path, false)) {
                 writer.WriteLine (getHeaderRow ());
-                foreach (PurchasableItem item in db.AllPurchasableItems) {
+                foreach (PurchasableItem item in config.AllPurchasableItems) {
                     if (PurchaseType.Subscription == item.PurchaseType) {
                         continue;
                     }
@@ -64,24 +58,21 @@ namespace Unibill.Impl {
         }
 
         public string[] serialiseItem(PurchasableItem item) {
-            XElement rawElement = inventory.XPathSelectElement(string.Format ("//item[@id='{0}']", item.Id));
-            decimal priceInLocalCurrency = (decimal) rawElement.XPathSelectElement("platforms/GooglePlay/priceInLocalCurrency");
-            string defaultLocale = (string) rawElement.XPathSelectElement("platforms/GooglePlay/defaultLocale");
+            decimal priceInLocalCurrency;
+            decimal.TryParse(item.platformBundles[BillingPlatform.GooglePlay].getString("priceInLocalCurrency"), out priceInLocalCurrency);
+            string defaultLocale = item.platformBundles[BillingPlatform.GooglePlay].get<string>("defaultLocale");
 
             HashSet<string> otherLocales = new HashSet<string>(Enum.GetNames(typeof(GooglePlayLocale)));
             otherLocales.Remove(defaultLocale);
 
-            // If we auto translate we must specify every other locale to translate to.
-            string localesToTranslateTo = "";
-
             return new string[] {
-                remapper.mapItemIdToPlatformSpecificId(item),
+                item.LocalIds[BillingPlatform.GooglePlay],
                 "published",
                 "managed_by_android",
                 "false", // Auto translate no longer supported.
-                string.Format ("\"{0};{1};{2}{3}\"", defaultLocale, escape(item.name), escape(item.description), localesToTranslateTo),
+                string.Format ("\"{0};{1};{2}{3}\"", defaultLocale, escape(item.name), escape(item.description), string.Empty),
                 "true", // Auto fill prices.
-                string.Format("{0}", (int) (1000000 * priceInLocalCurrency)),
+                string.Format("{0}", (long) (1000000 * priceInLocalCurrency)),
             };
         }
 

@@ -16,34 +16,26 @@ namespace Unibill.Impl {
 
         private Dictionary<string, string> genericToPlatformSpecificIds;
         private Dictionary<string, string> platformSpecificToGenericIds;
-        public InventoryDatabase db { get; private set; }
-        private UnibillXmlParser parser;
 
-        public ProductIdRemapper (InventoryDatabase db, UnibillXmlParser parser, UnibillConfiguration config) {
-            this.db = db;
-            this.parser = parser;
+		public UnibillConfiguration db;
+
+		public ProductIdRemapper (UnibillConfiguration config) {
+            this.db = config;
             initialiseForPlatform(config.CurrentPlatform);
         }
 
         public void initialiseForPlatform (BillingPlatform platform) {
             genericToPlatformSpecificIds = new Dictionary<string, string>();
             platformSpecificToGenericIds = new Dictionary<string, string>();
-            string lookingFor = string.Format("{0}.Id", platform);
-            foreach (var item in parser.Parse("unibillInventory", "item")) {
-                string id = item.attributes["id"];
-                string mapsTo = id;
-                if (item.kvps.ContainsKey(lookingFor)) {
-                    mapsTo = item.kvps[lookingFor];
-                }
-                genericToPlatformSpecificIds[id] = mapsTo;
-                platformSpecificToGenericIds[mapsTo] = id;
-
+            foreach (PurchasableItem item in db.inventory) {
+                genericToPlatformSpecificIds.Add(item.Id, item.LocalId);
+                platformSpecificToGenericIds.Add(item.LocalId, item.Id);
             }
         }
 
         public string[] getAllPlatformSpecificProductIds () {
             var ids = new List<string> ();
-            foreach (PurchasableItem item in db.AllPurchasableItems) {
+			foreach (PurchasableItem item in db.AllPurchasableItems) {
                 ids.Add(mapItemIdToPlatformSpecificId(item));
             }
 
@@ -51,12 +43,15 @@ namespace Unibill.Impl {
         }
 
         public string mapItemIdToPlatformSpecificId(PurchasableItem item) {
+			if (!genericToPlatformSpecificIds.ContainsKey (item.Id)) {
+				throw new ArgumentException ("Unknown product id: " + item.Id);
+			}
             return genericToPlatformSpecificIds[item.Id];
         }
 
         public PurchasableItem getPurchasableItemFromPlatformSpecificId(string platformSpecificId) {
             string genericId = platformSpecificToGenericIds[platformSpecificId];
-            return db.getItemById(genericId);
+			return db.getItemById(genericId);
         }
 
         public bool canMapProductSpecificId (string id) {

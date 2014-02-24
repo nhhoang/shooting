@@ -16,6 +16,18 @@ namespace Uniject.Impl {
             PlayerPrefs.SetInt(key, value);
         }
         #endregion
+
+		#region IStorage implementation
+		public string GetString (string key, string defaultValue)
+		{
+			return PlayerPrefs.GetString(key, defaultValue);
+		}
+
+		public void SetString (string key, string val)
+		{
+			PlayerPrefs.SetString(key, val);
+		}
+		#endregion
     }
 }
 

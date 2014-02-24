@@ -4,6 +4,7 @@
 //  www.outlinegames.com
 //-----------------------------------------------------------------
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using Uniject;
 using Unibill;
@@ -49,22 +50,22 @@ public partial class PurchasableItem : IEquatable<PurchasableItem> {
     /// Ids should be structured similarly to bundle identifiers,
     /// eg com.companyname.productname.
     /// </summary>
-    public string Id { get; private set; }
+    public string Id { get; set; }
 
-	///
-	/// The type of this PurchasableItem; Consumable, Non-Consumable or Subscription.
-	///
-    public PurchaseType PurchaseType { get; private set; }
+    ///
+    /// The type of this PurchasableItem; Consumable, Non-Consumable or Subscription.
+    ///
+    public PurchaseType PurchaseType { get; set; }
     
     /// <summary>
     /// Name of the item as displayed to users.
     /// </summary>
-    public string name { get; private set; }
+    public string name { get; set; }
     
     /// <summary>
     /// Description of the item as displayed to users.
     /// </summary>
-    public string description { get; private set; }
+    public string description { get; set; }
 
     /// <summary>
     /// !!!!DEPRECATED!!!!
@@ -78,9 +79,7 @@ public partial class PurchasableItem : IEquatable<PurchasableItem> {
 
     /// <summary>
     /// Gets the localized price.
-    /// The precise formatting of this string varies across platforms.
-    /// On Google Play, formatting includes the currency symbol.
-    /// On other platforms, this is formatted as a decimal number.
+	/// This is the price formatted with currency symbol.
     /// </summary>
     /// <value>The localized price string.</value>
     public string localizedPriceString { get; private set; }
@@ -97,15 +96,145 @@ public partial class PurchasableItem : IEquatable<PurchasableItem> {
     /// </summary>
     public string localizedDescription { get; private set; }
 
-    internal PurchasableItem(string id, PurchaseType purchaseType, string name, string description) {
+    /// <summary>
+    /// The platform specific identifier of the item, which is either the Id or 
+    /// the overridden value if configured in the inventory editor.
+    /// </summary>
+    public string LocalId {
+        get {
+			if (string.IsNullOrEmpty (LocalIds [platform])) {
+				return Id;
+			}
+            return LocalIds[platform];
+        }
+    }
+
+    /// <summary>
+    /// The platform specific identifiers per billing platform, where specified.
+    /// </summary>
+    public Dictionary<BillingPlatform, string> LocalIds { get; private set; }
+
+    public Dictionary<BillingPlatform, Dictionary<string, object>> platformBundles;
+
+    private BillingPlatform platform;
+
+    public PurchasableItem() {
+        this.Id = new Random().Next().ToString();
+        this.description = "Describe me!";
+        this.name = "Name me!";
+        this.PurchaseType = global::PurchaseType.NonConsumable;
+        platformBundles = new Dictionary<BillingPlatform, Dictionary<string, object>>();
+        LocalIds = new Dictionary<BillingPlatform, string>();
+        foreach (BillingPlatform billingPlatform in Enum.GetValues(typeof(BillingPlatform))) {
+            platformBundles[billingPlatform] = new Dictionary<string, object>();
+            LocalIds[billingPlatform] = string.Empty;
+        }
+    }
+
+    public PurchasableItem(string id, Dictionary<string, object> hash, BillingPlatform platform) {
         this.Id = id;
-        this.PurchaseType = purchaseType;
-        this.name = name;
-        this.description = description;
+        this.platform = platform;
+        Deserialize(hash);
+    }
+
+    private void Deserialize(Dictionary<string, object> hash) {
+        this.PurchaseType = hash.getEnum<PurchaseType>("@purchaseType");
+        this.name = hash.get<string>("name");
+        this.description = hash.get<string>("description");
+        this.localizedTitle = name;
+        this.localizedDescription = description;
+        LocalIds = new Dictionary<BillingPlatform, string>();
+        platformBundles = new Dictionary<BillingPlatform, Dictionary<string, object>>();
+        Dictionary<string, object> platforms = (Dictionary<string, object>)hash["platforms"];
+
+        foreach (BillingPlatform billingPlatform in Enum.GetValues(typeof(BillingPlatform))) {
+            if (platforms.ContainsKey(billingPlatform.ToString())) {
+                Dictionary<string, object> platformData = (Dictionary<string, object>)platforms[billingPlatform.ToString()];
+                string key = string.Format("{0}.Id", billingPlatform);
+                if (platformData != null && platformData.ContainsKey(key)) {
+                    LocalIds.Add(billingPlatform, (string)platformData[key]);
+                }
+
+                if (platformData != null) {
+                    platformBundles[billingPlatform] = platformData;
+                }
+            }
+
+            if (!LocalIds.ContainsKey(billingPlatform)) {
+                LocalIds[billingPlatform] = Id;
+            }
+            if (!platformBundles.ContainsKey(billingPlatform)) {
+                platformBundles[billingPlatform] = new Dictionary<string, object>();
+            }
+        }
+
+    }
+
+    public Dictionary<string, object> Serialize() {
+        Dictionary<string, object> result = new Dictionary<string, object>();
+        result.Add("@id", Id);
+        result.Add("@purchaseType", PurchaseType.ToString());
+        result.Add("name", name);
+        result.Add("description", description);
+        result.Add("platforms", platformBundles);
+        return result;
     }
 
     public bool Equals (PurchasableItem other) {
         return other.Id == this.Id;
+    }
+}
+
+namespace Unibill.Impl {
+    public class WritablePurchasable {
+        public PurchasableItem item { get; private set; }
+        public WritablePurchasable(PurchasableItem item) {
+            this.item = item;
+        }
+
+        public string Id {
+            get { return item.Id; }
+            set { item.Id = value; }
+        }
+
+        public PurchaseType PurchaseType {
+            get { return item.PurchaseType; }
+            set { item.PurchaseType = value; }
+        }
+
+        public string description {
+            get { return item.description; }
+            set { item.description = value; }
+        }
+
+        public string name {
+            get { return item.name; }
+            set { item.name = value; }
+        }
+    }
+}
+
+public class VirtualCurrency {
+    public string currencyId { get; set; }
+
+    public Dictionary<string, decimal> mappings { get; private set; }
+    public VirtualCurrency(string id, Dictionary<string, decimal> mappings) {
+        this.currencyId = id;
+        this.mappings = mappings;
+    }
+
+    public Dictionary<string, object> Serialize() {
+        var result = new Dictionary<string, object>();
+        result.Add("currencyId", currencyId);
+        var mapList = new List<Dictionary<string, object>>();
+        foreach (var kvp in mappings) {
+            var dic = new Dictionary<string, object>();
+            dic.Add("id", kvp.Key);
+            dic.Add("amount", kvp.Value);
+            mapList.Add(dic);
+        }
+        result.Add("mappings", mapList);
+        return result;
     }
 }
 
@@ -114,46 +243,4 @@ public partial class PurchasableItem : IEquatable<PurchasableItem> {
 /// </summary>
 public class InventoryDatabase {
 
-    private List<PurchasableItem> items;
-    private ILogger logger;
-
-    public InventoryDatabase (UnibillXmlParser parser, ILogger logger) {
-        this.logger = logger;
-        items = new List<PurchasableItem> ();
-        foreach (var item in parser.Parse("unibillInventory", "item")) {
-            string id;
-            item.attributes.TryGetValue("id", out id);
-            PurchaseType type = (PurchaseType)Enum.Parse (typeof(PurchaseType), (string)item.attributes["purchaseType"]);
-            string name;
-            item.kvps.TryGetValue("name", out name);
-            string description;
-            item.kvps.TryGetValue("description", out description);
-
-            items.Add (new PurchasableItem (id, type, name, description));
-        }
-    }
-
-    public PurchasableItem getItemById (string id) {
-        PurchasableItem result = items.Find (x => x.Id == id);
-        if (null == result) {
-            logger.LogWarning("Unknown purchasable item:{0}. Check your Unibill inventory configuration.", id);
-        }
-        return result;
-    }
-
-    public List<PurchasableItem> AllPurchasableItems {
-        get { return new List<PurchasableItem> (items); } // Defensive copy to prevent modification.
-    }
-
-    public List<PurchasableItem> AllNonConsumablePurchasableItems {
-        get { return items.FindAll (x => x.PurchaseType == PurchaseType.NonConsumable); }
-    }
-
-    public List<PurchasableItem> AllConsumablePurchasableItems {
-        get { return items.FindAll (x => x.PurchaseType == PurchaseType.Consumable); }
-    }
-
-    public List<PurchasableItem> AllSubscriptions {
-        get { return items.FindAll (x => x.PurchaseType == PurchaseType.Subscription); }
-    }
 }

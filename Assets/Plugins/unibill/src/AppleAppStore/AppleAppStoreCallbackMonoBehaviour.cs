@@ -14,6 +14,7 @@ public class AppleAppStoreCallbackMonoBehaviour : MonoBehaviour {
     public void Awake() {
         gameObject.name = this.GetType().ToString();
         DontDestroyOnLoad(this);
+        
     }
 
     private AppleAppStoreBillingService callback;

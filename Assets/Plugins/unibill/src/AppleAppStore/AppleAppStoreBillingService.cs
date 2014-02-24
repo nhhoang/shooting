@@ -24,7 +24,7 @@ namespace Unibill.Impl {
         private HashSet<string> productsNotReturnedByStorekit = new HashSet<string>();
         public IStoreKitPlugin storekit { get; private set; }
 
-        public AppleAppStoreBillingService(InventoryDatabase db, ProductIdRemapper mapper, IStoreKitPlugin storekit) {
+        public AppleAppStoreBillingService(UnibillConfiguration db, ProductIdRemapper mapper, IStoreKitPlugin storekit) {
             this.storekit = storekit;
             this.remapper = mapper;
             storekit.initialise(this);
@@ -36,7 +36,7 @@ namespace Unibill.Impl {
             bool available = storekit.storeKitPaymentsAvailable ();
             if (available) {
                 string[] platformSpecificProductIds = remapper.getAllPlatformSpecificProductIds();
-                storekit.storeKitRequestProductData (string.Join (",", platformSpecificProductIds));
+                storekit.storeKitRequestProductData (string.Join (",", platformSpecificProductIds), platformSpecificProductIds);
             } else {
                 biller.logError(UnibillError.STOREKIT_BILLING_UNAVAILABLE);
                 biller.onSetupComplete(false);
@@ -63,15 +63,15 @@ namespace Unibill.Impl {
                 return;
             }
 
-            Hashtable response = (Hashtable)MiniJSON.jsonDecode (productListString);
+            Dictionary<string, object> response = (Dictionary<string, object>)Unibill.Impl.MiniJSON.jsonDecode(productListString);
             HashSet<PurchasableItem> productsReceived = new HashSet<PurchasableItem>();
             foreach (var identifier in response.Keys) {
                 var item = remapper.getPurchasableItemFromPlatformSpecificId(identifier.ToString());
-                Hashtable details = (Hashtable) response[identifier];
+                Dictionary<string, object> details = (Dictionary<string, object>)response[identifier];
 
-                PurchasableItem.Writer.setLocalizedPrice(item, (decimal) (double) details["price"]);
-                PurchasableItem.Writer.setLocalizedTitle(item, (string) details["localizedTitle"]);
-                PurchasableItem.Writer.setLocalizedDescription(item, (string) details["localizedDescription"]);
+                PurchasableItem.Writer.setLocalizedPrice(item, details["price"].ToString());
+                PurchasableItem.Writer.setLocalizedTitle(item, details["localizedTitle"].ToString());
+                PurchasableItem.Writer.setLocalizedDescription(item, details["localizedDescription"].ToString());
                 productsReceived.Add(item);
             }
 
@@ -90,7 +90,7 @@ namespace Unibill.Impl {
         }
         
         public void onPurchaseSucceeded(string data) {
-            Hashtable response = (Hashtable)MiniJSON.jsonDecode (data);
+            Dictionary<string, object> response = (Dictionary<string, object>)Unibill.Impl.MiniJSON.jsonDecode(data);
             biller.onPurchaseSucceeded((string) response["productId"], (string) response["receipt"]);
         }
         

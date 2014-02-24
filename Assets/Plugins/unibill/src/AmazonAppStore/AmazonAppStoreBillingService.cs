@@ -15,13 +15,13 @@ namespace Unibill.Impl {
 
         private IBillingServiceCallback callback;
         private ProductIdRemapper remapper;
-        private InventoryDatabase db;
+        private UnibillConfiguration db;
         private ILogger logger;
         private IRawAmazonAppStoreBillingInterface amazon;
         private HashSet<string> unknownAmazonProducts = new HashSet<string>();
         private TransactionDatabase tDb;
 
-        public AmazonAppStoreBillingService (IRawAmazonAppStoreBillingInterface amazon, ProductIdRemapper remapper, InventoryDatabase db, TransactionDatabase tDb, ILogger logger) {
+        public AmazonAppStoreBillingService(IRawAmazonAppStoreBillingInterface amazon, ProductIdRemapper remapper, UnibillConfiguration db, TransactionDatabase tDb, ILogger logger) {
             this.remapper = remapper;
             this.db = db;
             this.logger = logger;
@@ -63,7 +63,7 @@ namespace Unibill.Impl {
 
         public void onProductListReceived (string productListString) {
 
-            Hashtable response = (Hashtable)MiniJSON.jsonDecode (productListString);
+            Dictionary<string, object> response = (Dictionary<string, object>)Unibill.Impl.MiniJSON.jsonDecode(productListString);
 
             if (response.Count == 0) {
                 callback.logError (UnibillError.AMAZONAPPSTORE_GETITEMDATAREQUEST_NO_PRODUCTS_RETURNED);
@@ -74,9 +74,9 @@ namespace Unibill.Impl {
             HashSet<PurchasableItem> productsReceived = new HashSet<PurchasableItem>();
             foreach (var identifier in response.Keys) {
                 var item = remapper.getPurchasableItemFromPlatformSpecificId(identifier.ToString());
-                Hashtable details = (Hashtable) response[identifier];
+                Dictionary<string, object> details = (Dictionary<string, object>)response[identifier];
                 
-                PurchasableItem.Writer.setLocalizedPrice(item, (string) details["price"]);
+                PurchasableItem.Writer.setLocalizedPrice(item, details["price"].ToString());
                 PurchasableItem.Writer.setLocalizedTitle(item, (string) details["localizedTitle"]);
                 PurchasableItem.Writer.setLocalizedDescription(item, (string) details["localizedDescription"]);
                 productsReceived.Add(item);
@@ -116,7 +116,7 @@ namespace Unibill.Impl {
         }
 
         public void onPurchaseSucceeded(string json) {
-            Hashtable response = (Hashtable)MiniJSON.jsonDecode (json);
+            Dictionary<string, object> response = (Dictionary<string, object>)Unibill.Impl.MiniJSON.jsonDecode(json);
 
             string productId = (string) response ["productId"];
             string token = (string) response ["purchaseToken"];
