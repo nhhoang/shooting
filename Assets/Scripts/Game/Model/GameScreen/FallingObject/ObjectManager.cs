@@ -44,7 +44,7 @@ public class ObjectManager : MonoBehaviour {
 	public static Color[] colors = new Color[9];
 	private int randomBonusObject = 0;
 	private int numFailObject = 0;
-	private int objectNormalScale = 8;
+	private int objectNormalScale = 16;
 	private bool isGameObject = false;
 	
 	public void Init(FallingController manager) {
