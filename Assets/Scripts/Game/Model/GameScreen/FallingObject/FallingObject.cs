@@ -35,10 +35,10 @@ public class FallingObject : MonoBehaviour {
 			InvokeRepeating("ChangeRandomType", 0, 0.5f);
 		}
 		
-		if (fallOrbitType == 1) {
-			// Change orbit in interval time
-			Invoke("ChangeOrbit", 0.2f);
-		}
+//		if (fallOrbitType == 1) {
+//			// Change orbit in interval time
+//			Invoke("ChangeOrbit", 0.2f);
+//		}
 		
 		render = objRenderer;
 		child = childTransform;

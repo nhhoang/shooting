@@ -3,9 +3,9 @@ using System;
 using Boomlagoon.JSON;
 
 public class GameData {
-	private static int currentScore;
-	private static int bestTimeModeScore;
-	private static int bestBulletModeScore;
+	private static int currentScore = 0;
+	private static int bestTimeModeScore = 0;
+	private static int bestBulletModeScore = 0;
 	
 	private static int isSoundOn = 1;
 	private static int isMusicOn = 1;
